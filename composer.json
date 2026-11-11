@@ -1,0 +1,6 @@
+{
+    "require": {
+        "php-shapefile/shapefile": "^3.5",
+        "catfan/medoo": "^2.1"
+    }
+}
