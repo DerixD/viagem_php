@@ -1,24 +1,45 @@
-version: '3.8'
 
 services:
-  web:
-    build: .
+  php:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: viagem-php
+    volumes:
+      - ./:/var/www/html
+      - vendor_data:/var/www/html/vendor
+    depends_on:
+      db:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:alpine
+    container_name: viagem-nginx
     ports:
       - "8080:80"
     volumes:
-      - .:/var/www/html
+      - ./:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
-      - db
+      - php
 
   db:
-    image: mysql:8.0
+    image: postgis/postgis:16-3.4
+    container_name: viagem-db
     environment:
-      MYSQL_ROOT_PASSWORD: 2412
-      MYSQL_DATABASE: muj_projekt
+      POSTGRES_DB: viagem
+      POSTGRES_USER: viagem
+      POSTGRES_PASSWORD: secret
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - db_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U viagem -d viagem"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  db_data:
+  postgres_data:
+  vendor_data:
