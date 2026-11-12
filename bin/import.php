@@ -38,7 +38,7 @@
 
     $PG = "host=$host dbname=$db user=$user password=$pass";
 
-    $ogr2ogrCMD = 'ogr2ogr -f PostgreSQL ' .
+    $ogr2ogrCMD = 'ogr2ogr -f PostgreSQL -overwrite ' .
               escapeshellarg("PG:$PG") .
               ' -nln parcely ' .
               escapeshellarg($polygonShp);
@@ -58,7 +58,7 @@
         echo "Import proběhl úspěšně.\n";
     }
 
-    $ogr2ogrCMD2 = 'ogr2ogr -f PostgreSQL ' .
+    $ogr2ogrCMD2 = 'ogr2ogr -f PostgreSQL -overwrite ' .
                 escapeshellarg("PG:$PG") .
                 ' -nln parcely_kn_def ' .
                 escapeshellarg($defShp);
@@ -76,4 +76,22 @@
         echo "Import se nezdařil.\n";
     } else {
         echo "Import proběhl úspěšně.\n";
+    }
+
+    $createViewSQL = "
+        CREATE OR REPLACE VIEW parcely_komplet AS 
+        SELECT 
+            p.id_2,
+            p.wkb_geometry AS geom,
+            d.text_km AS cislo_parcely,
+            d.par_vymera AS vymera,
+            d.drupoz_kod AS druh_pozemku_kod
+        FROM parcely p
+        LEFT JOIN parcely_kn_def d ON p.id_2 = d.id_2;";
+
+    try {
+        $php_data_object->exec($createViewSQL);
+        echo "Pohled 'parcely_komplet' byl vytvořen úspěšně.\n";
+    } catch (PDOException $e) {
+        die("Chyba při vytváření pohledu: " . $e->getMessage()) . "\n";
     }
