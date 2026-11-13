@@ -4,7 +4,8 @@
      * @author  Denis Hošek
      * @date 2024-06-05
      * @brief Skript pro import dat do databáze
-     */
+     **/
+    
     // Nastavení připojení k databázi
     $host = 'db';
     $db = 'viagem';
