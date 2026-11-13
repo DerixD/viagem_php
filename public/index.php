@@ -34,7 +34,7 @@
                     },
                     onEachFeature: function (feature, layer) {
                         if (feature.properties) {
-                            let popupContent = "Parcela: " + (feature.properties.parcislo || 'N/A');
+                            let popupContent = "<h3>Parcela: " + (feature.properties.cislo_parcely || 'N/A') + "</h3>"+ "<b>Výměra: </b>" + (feature.properties.vymera || 'N/A') +" m² <br>"+ "<b>Druh pozemku: </b>" + (feature.properties.druh_pozemku_kod || 'N/A');
                             layer.bindPopup(popupContent);
                         }
                     }
