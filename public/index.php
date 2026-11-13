@@ -37,15 +37,13 @@
                             Vyberte město...
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item locality-link" href="#" data-lat="50.4193" data-lng="15.3470">Čejkovice</a></li>
-                            <li><a class="dropdown-item locality-link" href="#" data-lat="50.4516" data-lng="15.3207">Holín</a></li>
-                            <li><a class="dropdown-item locality-link" href="#" data-lat="50.4550" data-lng="15.3508">Kbelnice</a></li>
-                            <li><a class="dropdown-item locality-link" href="#" data-lat="50.4262" data-lng="15.3788">Moravčice</a></li>
-                            <li><a class="dropdown-item locality-link" href="#" data-lat="50.4145" data-lng="15.3728">Popovice</a></li>
-                            <li><a class="dropdown-item locality-link" href="#" data-lat="50.4322" data-lng="15.3989">Robousy</a></li>
-                            <li><a class="dropdown-item locality-link" href="#" data-lat="50.4550" data-lng="15.3848">Valdice</a></li>
+                            <li><a class="dropdown-item locality-link" href="#" data-lat="50.4193" data-lng="15.3470" data-zoom="16">Čejkovice</a></li>
+                            <li><a class="dropdown-item locality-link" href="#" data-lat="50.4516" data-lng="15.3207" data-zoom="16">Holín</a></li>
+                            <li><a class="dropdown-item locality-link" href="#" data-lat="50.4262" data-lng="15.3788" data-zoom="16">Moravčice</a></li>
+                            <li><a class="dropdown-item locality-link" href="#" data-lat="50.4322" data-lng="15.3989" data-zoom="16">Robousy</a></li>
+                            <li><a class="dropdown-item locality-link" href="#" data-lat="50.4550" data-lng="15.3848" data-zoom="16">Valdice</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item locality-link" href="#" data-lat="50.4372" data-lng="15.3516">Jičín</a></li>
+                            <li><a class="dropdown-item locality-link" href="#" data-lat="50.4372" data-lng="15.3516" data-zoom="16">Jičín</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -54,7 +52,6 @@
                     <button class="btn btn-outline-success search-btn" type="submit">vyhledat</button>
                     <button class="btn btn-outline-success download-btn" type="button">stáhnout</button>
                 </form>
-                </div>
             </div>
         </nav>
 
@@ -62,118 +59,126 @@
         <div id='map'></div>
 
         <script>
-            // Inicializace mapy
-            const map = L.map('map').setView([50.437, 15.351], 13);
+            const map = L.map('map', {
+                renderer: L.canvas()
+          }).setView([50.437, 15.351], 13);
 
             // Odstranění tabindex atributu z kontejneru mapy, pokud existuje
             if (map.getContainer().hasAttribute('tabindex')) {
                 map.getContainer().removeAttribute('tabindex');
-        }
-            // Přidání OpenStreetMap dlaždicD
+            }
+
+            // Přidání OpenStreetMap dlaždic
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
-
-            // Načtení dat z API a přidání do mapy
-            fetch('./api.php') 
-            .then(response => response.json())
-            .then(data => {
-                L.geoJson(data, {
-                    style: {
-                        color: '#ff7800',
-                        weight: 2,
-                        fillOpacity: 0.2
-                    },
-                    onEachFeature: function (feature, layer) {
-                        if (feature.properties) {
-                            let popupContent = "<h3>Parcela: " + (feature.properties.cislo_parcely || 'N/A') + "</h3>"+ "<b>Výměra: </b>" + (feature.properties.vymera || 'N/A') +" m² <br>"+ "<b>Druh pozemku: </b>" + (feature.properties.druh_pozemku_kod || 'N/A');
-                            layer.bindPopup(popupContent);
-                        }
+            
+          fetch('./api.php') 
+          .then(response => {
+              return response.json();
+        })
+        .then(data => {
+            
+            const featureCount = data.features ? data.features.length : 'neznámo';       
+            L.geoJson(data, {
+                style: {
+                    color: '#ff7800',
+                    weight: 2,
+                    fillOpacity: 0.2
+                },
+                onEachFeature: function (feature, layer) {
+                    if (feature.properties) {
+                        let popupContent = "<h3>Parcela: " + (feature.properties.cislo_parcely || 'N/A') + "</h3>"+ "<b>Výměra: </b>" + (feature.properties.vymera || 'N/A') +" m² <br>"+ "<b>Druh pozemku: </b>" + (feature.properties.druh_pozemku_kod || 'N/A');
+                        layer.bindPopup(popupContent);
                     }
-                }).addTo(map);
-            })
-            .catch(error => console.error('Chyba při načítání dat z API:', error));
+                }
+            }).addTo(map);
+        })
+        .catch(error => console.error('Chyba při načítání dat z API:', error));
 
-            // Přidání události pro odkazy v navigační liště
-            document.querySelectorAll('.locality-link').forEach(link => {
-                link.addEventListener('click', function(event) {
-                    event.preventDefault();
-                    const lat = parseFloat(this.getAttribute('data-lat'));
-                    const lng = parseFloat(this.getAttribute('data-lng'));
-                    const zoom = parseInt(this.getAttribute('data-zoom')) || 14;
+        // Přidání události pro odkazy v navigační liště
+        document.querySelectorAll('.locality-link').forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                const lat = parseFloat(this.getAttribute('data-lat'));
+                const lng = parseFloat(this.getAttribute('data-lng'));
+                const zoom = parseInt(this.getAttribute('data-zoom')) || 14;
 
-                    if (!isNaN(lat) && !isNaN(lng)) {
-                        map.setView([lat, lng], zoom);
-                    }
-                });
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    map.setView([lat, lng], zoom);
+                }
             });
+        });
 
-            // Přidání události pro vyhledávací formulář
-            const searchForm = document.querySelector('.search-btn').closest('form');
+        // Přidání události pro vyhledávací formulář
+        const searchForm = document.querySelector('.search-btn').closest('form');
 
-            if (searchForm) {
-                searchForm.addEventListener('submit', function(event) {
-                    event.preventDefault();
-                    const searchInput = this.querySelector('input[type="search"]');
-                    const query = searchInput.value.trim() || '';
+        if (searchForm) {
+            searchForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const searchInput = this.querySelector('input[type="search"]');
+                const query = searchInput.value.trim() || '';
 
-                    const url = "./api.php?search=" + encodeURIComponent(query);
+                const url = "./api.php?search=" + encodeURIComponent(query);
 
-                    fetch(url)
-                    .then(response => response.json())
-                    .then(data => {
-                        // Odstranění předchozích vrstev z mapy
-                        map.eachLayer(layer => {
-                            if (layer instanceof L.GeoJSON) {
-                                map.removeLayer(layer);
+                fetch(url)
+                .then(response => {
+                    return response.json();
+                })
+                .then(data => {
+                    // Odstranění předchozích vrstev z mapy
+                    map.eachLayer(layer => {
+                        if (layer instanceof L.GeoJSON) {
+                            map.removeLayer(layer);
+                        }
+                    });
+                    
+                    // Přidání nové vrstvy s výsledky vyhledávání
+                    L.geoJson(data, {
+                        style: {
+                            color: '#ff7800',
+                            weight: 2,
+                            fillOpacity: 0.2
+                        },
+                        onEachFeature: function (feature, layer) {
+                            if (feature.properties) {
+                                let popupContent = "<h3>Parcela: " + (feature.properties.cislo_parcely || 'N/A') + "</h3>"+ "<b>Výměra: </b>" + (feature.properties.vymera || 'N/A') +" m² <br>"+ "<b>Druh pozemku: </b>" + (feature.properties.druh_pozemku_kod || 'N/A');
+                                layer.bindPopup(popupContent);
                             }
-                        });
+                        }
+                    }).addTo(map);
+                })
+                .catch(error => console.error('Chyba při vyhledávání:', error));
+            });
+        }
 
-                        // Přidání nové vrstvy s výsledky vyhledávání
-                        L.geoJson(data, {
-                            style: {
-                                color: '#ff7800',
-                                weight: 2,
-                                fillOpacity: 0.2
-                            },
-                            onEachFeature: function (feature, layer) {
-                                if (feature.properties) {
-                                    let popupContent = "<h3>Parcela: " + (feature.properties.cislo_parcely || 'N/A') + "</h3>"+ "<b>Výměra: </b>" + (feature.properties.vymera || 'N/A') +" m² <br>"+ "<b>Druh pozemku: </b>" + (feature.properties.druh_pozemku_kod || 'N/A');
-                                    layer.bindPopup(popupContent);
-                                }
-                            }
-                        }).addTo(map);       
-                    })
-                });
-            }
+        const downloadBtn = document.querySelector('.download-btn');
 
-            const downloadBtn = document.querySelector('.download-btn');
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', function(event) {
+                event.preventDefault();
 
-            if (downloadBtn) {
-                downloadBtn.addEventListener('click', function(event) {
-                    event.preventDefault();
+                const searchInput = this.closest('form').querySelector('input[type="search"]');
+                const query = searchInput ? searchInput.value.trim() : '';
 
-                    const searchInput = this.closest('form').querySelector('input[type="search"]');
-                    const query = searchInput ? searchInput.value.trim() : '';
+                const url = "./api.php?search=" + encodeURIComponent(query) + "&download=true";
 
-                    const url = "./api.php?search=" + encodeURIComponent(query) + "&download=true";
+                fetch(url)
+                .then(response => response.blob())
+                .then(blob => {
+                    const downloadUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
 
-                    fetch(url)
-                    .then(response => response.blob())
-                    .then(blob => {
-                        const downloadUrl = window.URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-
-                        a.href = downloadUrl;
-                        a.download = 'parcely_export.geojson';
-                        document.body.appendChild(a);
-                        a.click();
-                        a.remove();
-                        window.URL.revokeObjectURL(downloadUrl);
-                    })
-                    .catch(error => console.error('Chyba při stahování souboru:', error));
-                });
-            }
-        </script>
+                    a.href = downloadUrl;
+                    a.download = 'parcely_export.geojson';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(downloadUrl);
+                })
+                .catch(error => console.error('Chyba při stahování souboru:', error));
+            });
+        }
+    </script>
     </body>
 </html>

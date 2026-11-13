@@ -50,7 +50,7 @@
         $polygonShp = "/var/www/html/$slozka/PARCELY_KN_P.shp";
         $defShp     = "/var/www/html/$slozka/PARCELY_KN_DEF.shp";
 
-        echo "$polygonShp $defShp $spedcification";
+        echo "$polygonShp $defShp";
         if (!file_exists($polygonShp) || !file_exists($defShp)) {
             echo "Chybí některý ze SHP souborů ve složce $slozka/, přeskakuji...\n";
             continue;
