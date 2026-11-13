@@ -1,3 +1,10 @@
+<?php
+/**
+ * @file index.php
+ * @author  Denis Hošek
+ * @date 2024-06-05
+ * @brief Frontendová část s mapou (Leaflet.js) a načítáním GeoJSON z API
+ */?>
 <!DOCTYPE html>
 <html lang='en'>
     <head>
@@ -12,17 +19,19 @@
 
     </head>
     <body>
-        
+        <!-- Zobrazení mapy -->
         <div id='map'></div>
 
         <script>
+            // Inicializace mapy
             const map = L.map('map').setView([50.437, 15.351], 13);
-            
-            // Opraveno titleLayer -> tileLayer
+
+            // Přidání OpenStreetMap dlaždicD
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
 
+            // Načtení dat z API a přidání do mapy
             fetch('./api.php') 
             .then(response => response.json())
             .then(data => {

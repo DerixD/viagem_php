@@ -1,34 +1,48 @@
 <?php
+    /**
+     * @file api.php
+     * @author  Denis Hošek
+     * @date 2024-06-05
+     * @brief API pro získání GeoJSON dat z PostgreSQL databáze
+     */
+    // Nastavení hlavičky pro JSON výstup
     header('Content-Type: application/json');
+
+    // Připojení k databázi PostgreSQL
     $host = 'db';
     $db = 'viagem';
     $user = 'viagem';
     $pass = 'secret';
     $data_source_name = "pgsql:host=$host;dbname=$db";
 
+    // Test připojení k databazy
     try {
         $php_data_object = new PDO($data_source_name, $user, $pass, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
         ]);
     } catch (PDOException $e) {
         die("Chyba připojení: ". $e->getMessage());
+    }
 
+    // Kontrola, zda je požadavek typu GET
     if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
         echo json_encode(["error" => "Povoleny jsou pouze GET požadavky."]);
         http_response_code(405);
         exit;
     }
-    }
-
+    
+    // Povolené hodnoty parametru view
     $allowedViews = ['parcely_komplet', 'parcely', 'parcely_kn_def'];
     $view = $_GET['view'] ?? 'parcely_komplet';
 
+    // Kontrola, zda je hodnota parametru view povolená
     if (!in_array($view, $allowedViews, true)) {
         echo json_encode(["error" => "Neplatný parametr view."]);
         http_response_code(400);
         exit;
     }
 
+    // SQL dotaz pro získání GeoJSON dat z vybrané view
     try {
         $sql = "SELECT json_build_object(
             'type', 'FeatureCollection', 
